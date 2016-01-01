@@ -1,2 +1,466 @@
-# t2ws
-T2WS - Tiny Tcl Web Server
+# T2WS - Tiny Tcl Web Server
+
+T2WS is a small HTTP server that is easily deployable and embeddable in a
+Tcl based application. To add a T2WS web server to a Tcl application, load
+the T2WS package and start the HTTP server for the desired port (e.g. 8085) :
+
+```
+ package require t2ws
+ t2ws::Start 8085 ::MyResponder
+```
+
+The T2WS web server requires an application specific responder command that
+provides the adequate responses to the HTTP requests. The HTTP request data
+are provided to the responder command in form of a dictionary, and the T2WS
+web server expects to get back from the responder command the response also
+in form of a dictionary. The following lines contain a responder command
+example. It allows either executing Tcl command lines and returns their
+results, or tells to the T2WS server to send files.
+
+```
+ proc MyResponder {Request} {
+    regexp {^([^\s]*)\s*(.*)$} [dict get $Request URI] {} Target ReqLine
+    switch -exact -- $Target {
+       "eval" {
+          if {[catch {set Data [uplevel #0 $ReqLine]}]} {
+             return [dict create Status "405" Body "405 - Incorrect Tcl command: $ReqLine"] }
+          return [dict create Body $Data ContentType "text/plain"]
+       }
+       "file" {
+          return [dict create File $ReqLine]
+       }
+    }
+    return [dict create Status "404" Body "404 - Unknown command: $ReqLine"]
+ }
+```
+
+More information about starting T2WS servers, stopping them, and assigning
+responder commands are provided in section [Main API commands]. Details about
+the way the responder commands are working are provided in section
+[The responder command].
+
+## Main API commands
+
+The following group of commands are usually sufficient to deploy a web
+server.
+
+***
+### Proc: t2ws::Start
+
+Starts a T2WS server. This command starts a T2WS HTTP web server at
+the specified port. It returns the specified port.
+
+Optionally, a responder command can be specified that is either applied
+for all HTTP request methods (GET, POST, ...) and all request URIs, or
+for a specific request method and URI. Additional responder commands
+for other request methods and URIs can be specified later with the
+[t2ws::DefineRoute] command.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|Port|HTTP port
+|[Responder]|Optional responder command
+|[Method]|HTTP request method glob matching pattern, default="*"
+|[URI]|HTTP request URI glob matching pattern, default="*"
+
+##### Returns
+
+HTTP port (used as T2WS HTTP web server identifier)
+
+##### Examples
+
+```
+ set MyServ [t2ws::Start $Port ::GetRequestResponseData GET]
+```
+
+##### See also
+
+[t2ws::DefineRoute], [t2ws::Stop]
+
+***
+### Proc: t2ws::Stop
+
+Stops one or multiple T2WS servers. If no port is provided all running
+T2WS HTTP web servers will be stopped, otherwise only the one specified
+by the provided port.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|[Ports]|HTTP ports of the T2WS server that have to be stopped
+
+##### Returns
+
+\-
+
+##### Examples
+
+```
+ t2ws::Stop $MyServ
+```
+
+##### See also
+
+[t2ws::Start]
+
+***
+### Proc: t2ws::DefineRoute
+
+Defines a responder command. The arguments 'Method' and 'URI' allow
+applying the specified responder command for a specific HTTP request
+method (GET, POST, ...) and request URI.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|Port|HTTP port
+|Responder|Responder command
+|[Method]|HTTP request method glob matching pattern, default="*"
+|[URI]|HTTP request URI glob matching pattern, default="*"
+
+##### Returns
+
+\-
+
+##### Examples
+
+```
+ t2ws::DefineRoute $MyServ ::GetRequestResponseData GET
+```
+
+##### See also
+
+[t2ws::Start]
+
+## The responder command
+
+The T2WS web server calls each HTTP request a responder command that has to be provided by the application/user. This responder command receives the entire HTTP request data in form of a dictionary, and has to provide back to the server the HTTP response data in form of another dictionary.
+
+##### Responder command setup
+
+[t2ws::Start] in combination with [t2ws::DefineRoute] allow specifying different responder commands for different HTTP request methods and URIs. The T2WS web server selects the target responder command by trying to match the HTTP request methods and URIs that have been defined together with the responder commands. More complex method and URI patterns are tried to be matched first and simpler patterns later. The responder command definition order is therefore irrelevant. An example of a set of responder commands is :
+
+```
+ set MyServ [t2ws::Start $Port ::Responder_General * *]
+ t2ws::DefineRoute $MyServ ::Responder_GetApi GET api/*
+ t2ws::DefineRoute $MyServ ::Responder_GetApiPriv GET api/privat/*
+ t2ws::DefineRoute $MyServ ::Responder_GetFile GET file/*
+```
+
+##### Request data dictionary
+
+The responder command receives all HTTP request data in form of a dictionary that contains the following elements :
+
+||Description
+|--:|---
+|Method|Request method in upper case (e.g. GET, POST, ...)
+|URI|Request URI, without leading '/'
+|Header|Request header data, formed itself as dictionary using as keys the header field names in lower case
+|Body|Request body, binary data
+
+##### Response data dictionary
+
+The responder command returns the response data to the server in form of a dictionary. All elements of this dictionary are optional. The main elements are :
+
+||Description
+|--:|---
+|Status|Either a known HTTP status code (e.g. '404'), a known HTTP status message (e.g. 'Not Found') or a custom status string (e.g. '404 File Not Found'). The default status value is '200 OK'. See \<t2ws::DefineStatusCode> and \<t2ws::GetStatusCode> for the HTTP status code and message definitions.
+|Body|HTTP response body, transferred binary encoded. The default body data is an empty string.
+|Header|Custom HTTP response headers fields, case sensitive (!). The header element is itself a dictionary that can specify multiple header fields.
+
+The following auxiliary elements of the response dictionary are recognized :
+
+||Description
+|--:|---
+|Content-Type|For convenience reasons content type can directly be specified with this  element instead of the corresponding header field.
+|File|If this element defines a file the file content is read by the T2WS web server and transferred as HTTP response body.
+|NoCache|If the value of this element is logically true (e.g. 1) the HTTP client is informed that the data is volatile (by sending the header field: Cache-Control: no-cache, no-store, must-revalidate).
+
+##### Examples of responder commands
+
+The following responder command returns simply the HTTP status 404. It can be invoked if no other responder command can be called.
+
+```
+ proc t2ws::Responder_General {Request} {
+    return [dict create Status "404"]
+ }
+```
+
+The next responder command extracts from the request URI a Tcl command. This one will be executed and the result returned in the respond body.
+
+```
+ proc t2ws::Responder_GetApi {Request} {
+    if {![regexp {^api/(.*)$} [dict get $Request URI] {} TclScript]} {
+       return [dict create Status "500" Body "500 - Tcl command cannot be extracted from '$URI'"] }
+    if {[catch {set Result [uplevel #0 $TclScript]} {
+       return [dict create Status "405" Body "405 - Incorrect Tcl command: $TclScript"] }
+    return [dict create Body $Result]
+ }
+```
+
+The next responder command extracts from the request URI a File name, that will be returned to the T2WS web server if it exists.
+
+```
+ proc t2ws::Responder_GetFile {Request} {
+    if {![regexp {^file/(.*)$} [dict get $Request URI] {} File]} {
+       return [dict create Status "500" Body "File cannot be extracted from '$URI'"] }
+    if {![file exists $File]} {
+       return [dict create Status "404" Body "404 - File doesn't exist: $File"] }
+    return [dict create File $File]
+ }
+```
+
+Rather than creating multiple responder commands for different targets it is also possible to create a single one that handles all requests.
+
+```
+ proc Responder_General {Request} {
+    regexp {^([^\s]*)\s*(.*)$} [dict get $Request URI] {} Target ReqLine
+    switch -exact -- $Target {
+       "" -
+       "help" {
+          set Data "\<h1>THC HTTP Debug Server\</h1>\n\
+                    help: this help information\<br>\n\
+                    eval [TclCommand]: Evaluate a Tcl command and returns the result\<br>\n\
+                    file/show [File]: Get file content\<br>\n\
+                    download [File]: Get file content (force download in a browser)"
+          return [dict create Body $Data ContentType .html]
+       }
+       "eval" {
+          if {[catch {set Data [uplevel #0 $ReqLine]}]} {
+             return [dict create Status "405" Body "405 - Incorrect Tcl command: $ReqLine"] }
+          return [dict create Body $Data]
+       }
+       "file" - "show" {
+          return [dict create File $ReqLine ContentType  "text/plain"]
+       }
+       "download" {
+          return [dict create File $ReqLine ContentType "" Header [dict create Content-Disposition "attachment; filename=\"[file tail $ReqLine]\""]]
+       }
+       "default" {
+          return [dict create Status "404" Body "404 - Unknown command: $ReqLine"]
+       }
+    }
+ }
+```
+
+## Configuration and customization
+
+The following group of commands allows configuring and customizing T2WS to
+application specific needs.
+
+***
+### Proc: t2ws::Configure
+
+Set and get T2WS configuration options. This command can be called in
+3 different ways :
+
+||Description
+|--:|---
+|t2ws::Configure|Returns the currently defined T2WS configuration
+|t2ws::Configure \<Option>|Returns the value of the provided option
+|t2ws::Configure \<Option/Value pairs>|Define options with new values
+
+The following options are supported :
+
+||Description
+|--:|---
+|-protocol|Forced response protocol. Has to be 'HTTP/1.0' or 'HTTP/1.1'
+|-default_Content-Type|Default content type if it is not explicitly specified by the responder command or if it cannot be derived from the file extension
+|-log_level|Log level, 0: no log, 1 (default): T2WS server start/stop logged, 2: transaction starts are logged, 3: full HTTP transfer is logged.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|[args]|Configuration attribute, configuration attribute/value pairs
+
+##### Returns
+
+Configuration options (if the command is called in way 1 or 2)
+
+##### Examples
+
+```
+ t2ws::Configure
+ -> -protocol {} -default_Content-Type text/plain -log_level 1
+ t2ws::Configure -default_Content-Type
+ -> text/plain
+ t2ws::Configure -default_Content-Type text/html
+```
+
+***
+### Proc: t2ws::DefineMimeType
+
+Define a Mime type. This command defines a Mime type for a given file
+type. For convenience reasons a full qualified file name can be provided;
+the file type/extension is in this case extracted. If the Mime type is
+already defined for a file type it will be replaced by the new one.
+
+The Mime types for the following file extensions are pre-defined :
+.txt .htm .html .css .gif .jpg .png .xbm .js .json .xml
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|File|File extension or full qualified file name
+|MimeType|Mime type
+
+##### Returns
+
+\-
+
+##### Examples
+
+```
+ t2ws::DefineMimeType .html text/html
+ t2ws::DefineMimeType c:/readme.txt text/plain
+```
+
+##### See also
+
+[t2ws::GetMimeType]
+
+***
+### Proc: t2ws::GetMimeType
+
+Returns Mime type. This command returns the Mime type defined for a
+given file. If no file is provided it returns the Mime type definition
+dictionary.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|[File]|File extension or full qualified file name
+
+##### Returns
+
+Mime type, or Mime type definition dictionary
+
+##### Examples
+
+```
+ t2ws::GetMimeType index.htm
+ -> text/html
+ t2ws::GetMimeType
+ -> {} text/plain .txt text/plain .htm text/html .html text/html ...
+```
+
+##### See also
+
+[t2ws::DefineMimeType]
+
+***
+### Proc: t2ws::DefineStatusCode
+
+Defines a HTTP status code. This command defines a HTTP status code
+together with its assigned message text.
+
+The following HTTP status codes are pre-defined :
+
+* 100 101 103
+* 200 201 202 203 204 205 206
+* 300 301 302 303 304 306 307 308
+* 400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415 416 417
+* 500 501 502 503 504 505 511
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|Code|HTTP status code
+|Message|HTTP status message
+
+##### Returns
+
+\-
+
+##### Examples
+
+```
+ t2ws::DefineStatusCode 200 "OK"
+ t2ws::DefineStatusCode 404 "Not Found"
+```
+
+##### See also
+
+[t2ws::GetStatusCode]
+
+***
+### Proc: t2ws::GetStatusCode
+
+Provides HTTP status code and message. This command provides for a
+given HTTP code or message the concatenated code and message. If no
+argument is provided it returns a dictionary of all defined HTTP codes.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|[CodeOrMessage]|HTTP code or message
+
+##### Returns
+
+Status code, or status code dictionary
+
+##### Examples
+
+```
+ t2ws::GetStatusCode 404
+ -> 404 Not Found
+ t2ws::GetStatusCode "Not Found"
+ -> 404 Not Found
+ t2ws::GetStatusCode "Not Found"
+ -> 100 {100 Continue} 101 {101 Switching Protocols} 103 {103 Checkpoint} ...
+```
+
+##### See also
+
+[t2ws::DefineStatusCode]
+
+***
+### Proc: t2ws::WriteLog
+
+This command is called each time a text has to be logged. The level of
+details that is logged can be configured via [t2ws::Configure]. The
+default implementation of this command just writes the text to stdout :
+
+```
+ proc t2ws::WriteLog {Message Tag} {
+    puts $Message
+ }
+```
+
+The implementation of this command can be changed to adapt it to an
+application need.
+
+##### Parameters
+
+|Parameters|Description
+|--:|---
+|Message|Message/text to log
+|Tag|Message tag, used tags: 'info', 'input', 'output'
+
+##### Returns
+
+\-
+
+##### See also
+
+[t2ws::Configure]
+
+[Main API commands]: #main-api-commands
+[The responder command]: #the-responder-command
+[t2ws::Configure]: #proc-t2wsconfigure
+[t2ws::DefineMimeType]: #proc-t2wsdefinemimetype
+[t2ws::DefineRoute]: #proc-t2wsdefineroute
+[t2ws::DefineStatusCode]: #proc-t2wsdefinestatuscode
+[t2ws::GetMimeType]: #proc-t2wsgetmimetype
+[t2ws::GetStatusCode]: #proc-t2wsgetstatuscode
+[t2ws::Start]: #proc-t2wsstart
+[t2ws::Stop]: #proc-t2wsstop
