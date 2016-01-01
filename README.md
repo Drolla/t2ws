@@ -1,21 +1,21 @@
-# T2WS - Tiny Tcl Web Server
+# T<sup>2</sup>WS - Tiny Tcl Web Server
 
-T2WS is a small HTTP server that is easily deployable and embeddable in a
-Tcl based application. To add a T2WS web server to a Tcl application, load
-the T2WS package and start the HTTP server for the desired port (e.g. 8085) :
+T<sup>2</sup>WS is a small HTTP server that is easily deployable and embeddable in a
+Tcl based application. To add a T<sup>2</sup>WS web server to a Tcl application, load
+the T<sup>2</sup>WS package and start the HTTP server for the desired port (e.g. 8085) :
 
 ```
  package require t2ws
  t2ws::Start 8085 ::MyResponder
 ```
 
-The T2WS web server requires an application specific responder command that
+The T<sup>2</sup>WS web server requires an application specific responder command that
 provides the adequate responses to the HTTP requests. The HTTP request data
-are provided to the responder command in form of a dictionary, and the T2WS
+are provided to the responder command in form of a dictionary, and the T<sup>2</sup>WS
 web server expects to get back from the responder command the response also
 in form of a dictionary. The following lines contain a responder command
 example. It allows either executing Tcl command lines and returns their
-results, or tells to the T2WS server to send files.
+results, or tells to the T<sup>2</sup>WS server to send files.
 
 ```
  proc MyResponder {Request} {
@@ -34,7 +34,7 @@ results, or tells to the T2WS server to send files.
  }
 ```
 
-More information about starting T2WS servers, stopping them, and assigning
+More information about starting T<sup>2</sup>WS servers, stopping them, and assigning
 responder commands are provided in section [Main API commands]. Details about
 the way the responder commands are working are provided in section
 [The responder command].
@@ -47,7 +47,7 @@ server.
 ***
 ### Proc: t2ws::Start
 
-Starts a T2WS server. This command starts a T2WS HTTP web server at
+Starts a T<sup>2</sup>WS server. This command starts a T<sup>2</sup>WS HTTP web server at
 the specified port. It returns the specified port.
 
 Optionally, a responder command can be specified that is either applied
@@ -67,7 +67,7 @@ for other request methods and URIs can be specified later with the
 
 ##### Returns
 
-HTTP port (used as T2WS HTTP web server identifier)
+HTTP port (used as T<sup>2</sup>WS HTTP web server identifier)
 
 ##### Examples
 
@@ -82,15 +82,15 @@ HTTP port (used as T2WS HTTP web server identifier)
 ***
 ### Proc: t2ws::Stop
 
-Stops one or multiple T2WS servers. If no port is provided all running
-T2WS HTTP web servers will be stopped, otherwise only the one specified
+Stops one or multiple T<sup>2</sup>WS servers. If no port is provided all running
+T<sup>2</sup>WS HTTP web servers will be stopped, otherwise only the one specified
 by the provided port.
 
 ##### Parameters
 
 |Parameters|Description
 |--:|---
-|[Ports]|HTTP ports of the T2WS server that have to be stopped
+|[Ports]|HTTP ports of the T<sup>2</sup>WS server that have to be stopped
 
 ##### Returns
 
@@ -138,11 +138,11 @@ method (GET, POST, ...) and request URI.
 
 ## The responder command
 
-The T2WS web server calls each HTTP request a responder command that has to be provided by the application/user. This responder command receives the entire HTTP request data in form of a dictionary, and has to provide back to the server the HTTP response data in form of another dictionary.
+The T<sup>2</sup>WS web server calls each HTTP request a responder command that has to be provided by the application/user. This responder command receives the entire HTTP request data in form of a dictionary, and has to provide back to the server the HTTP response data in form of another dictionary.
 
 ##### Responder command setup
 
-[t2ws::Start] in combination with [t2ws::DefineRoute] allow specifying different responder commands for different HTTP request methods and URIs. The T2WS web server selects the target responder command by trying to match the HTTP request methods and URIs that have been defined together with the responder commands. More complex method and URI patterns are tried to be matched first and simpler patterns later. The responder command definition order is therefore irrelevant. An example of a set of responder commands is :
+[t2ws::Start] in combination with [t2ws::DefineRoute] allow specifying different responder commands for different HTTP request methods and URIs. The T<sup>2</sup>WS web server selects the target responder command by trying to match the HTTP request methods and URIs that have been defined together with the responder commands. More complex method and URI patterns are tried to be matched first and simpler patterns later. The responder command definition order is therefore irrelevant. An example of a set of responder commands is :
 
 ```
  set MyServ [t2ws::Start $Port ::Responder_General * *]
@@ -177,7 +177,7 @@ The following auxiliary elements of the response dictionary are recognized :
 ||Description
 |--:|---
 |Content-Type|For convenience reasons content type can directly be specified with this  element instead of the corresponding header field.
-|File|If this element defines a file the file content is read by the T2WS web server and transferred as HTTP response body.
+|File|If this element defines a file the file content is read by the T<sup>2</sup>WS web server and transferred as HTTP response body.
 |NoCache|If the value of this element is logically true (e.g. 1) the HTTP client is informed that the data is volatile (by sending the header field: Cache-Control: no-cache, no-store, must-revalidate).
 
 ##### Examples of responder commands
@@ -202,7 +202,7 @@ The next responder command extracts from the request URI a Tcl command. This one
  }
 ```
 
-The next responder command extracts from the request URI a File name, that will be returned to the T2WS web server if it exists.
+The next responder command extracts from the request URI a File name, that will be returned to the T<sup>2</sup>WS web server if it exists.
 
 ```
  proc t2ws::Responder_GetFile {Request} {
@@ -249,18 +249,18 @@ Rather than creating multiple responder commands for different targets it is als
 
 ## Configuration and customization
 
-The following group of commands allows configuring and customizing T2WS to
+The following group of commands allows configuring and customizing T<sup>2</sup>WS to
 application specific needs.
 
 ***
 ### Proc: t2ws::Configure
 
-Set and get T2WS configuration options. This command can be called in
+Set and get T<sup>2</sup>WS configuration options. This command can be called in
 3 different ways :
 
 ||Description
 |--:|---
-|t2ws::Configure|Returns the currently defined T2WS configuration
+|t2ws::Configure|Returns the currently defined T<sup>2</sup>WS configuration
 |t2ws::Configure \<Option>|Returns the value of the provided option
 |t2ws::Configure \<Option/Value pairs>|Define options with new values
 
@@ -270,7 +270,7 @@ The following options are supported :
 |--:|---
 |-protocol|Forced response protocol. Has to be 'HTTP/1.0' or 'HTTP/1.1'
 |-default_Content-Type|Default content type if it is not explicitly specified by the responder command or if it cannot be derived from the file extension
-|-log_level|Log level, 0: no log, 1 (default): T2WS server start/stop logged, 2: transaction starts are logged, 3: full HTTP transfer is logged.
+|-log_level|Log level, 0: no log, 1 (default): T<sup>2</sup>WS server start/stop logged, 2: transaction starts are logged, 3: full HTTP transfer is logged.
 
 ##### Parameters
 
