@@ -1,8 +1,8 @@
 # T<sup>2</sup>WS - Tiny Tcl Web Server
 
 T<sup>2</sup>WS is a small HTTP server that is easily deployable and embeddable in a
-Tcl based application. To add a T<sup>2</sup>WS web server to a Tcl application, load
-the T<sup>2</sup>WS package and start the HTTP server for the desired port (e.g. 8085) :
+Tcl application. To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>WS
+package and start the HTTP server for the desired port (e.g. 8085) :
 
 ```
  package require t2ws
@@ -13,7 +13,7 @@ The T<sup>2</sup>WS web server requires an application specific responder comman
 provides the adequate responses to the HTTP requests. The HTTP request data
 are provided to the responder command in form of a dictionary, and the T<sup>2</sup>WS
 web server expects to get back from the responder command the response also
-in form of a dictionary. The following lines contain a responder command
+in form of a dictionary. The following lines implements a responder command
 example. It allows either executing Tcl command lines and returns their
 results, or tells to the T<sup>2</sup>WS server to send files.
 
@@ -41,7 +41,7 @@ the way the responder commands are working are provided in section
 
 ## Main API commands
 
-The following group of commands are usually sufficient to deploy a web
+The following group of commands is usually sufficient to deploy a web
 server.
 
 ***
@@ -53,26 +53,26 @@ the specified port. It returns the specified port.
 Optionally, a responder command can be specified that is either applied
 for all HTTP request methods (GET, POST, ...) and all request URIs, or
 for a specific request method and URI. Additional responder commands
-for other request methods and URIs can be specified later with the
-[t2ws::DefineRoute] command.
+for other request methods and/or URIs can be specified later with
+[t2ws::DefineRoute].
 
 ##### Parameters
 
 |Parameters|Description
 |--:|---
-|Port|HTTP port
-|[Responder]|Optional responder command
+|\<Port>|HTTP port
+|[Responder]|Responder command, optional
 |[Method]|HTTP request method glob matching pattern, default="*"
 |[URI]|HTTP request URI glob matching pattern, default="*"
 
 ##### Returns
 
-HTTP port (used as T<sup>2</sup>WS HTTP web server identifier)
+HTTP port (used as T<sup>2</sup>WS server identifier)
 
 ##### Examples
 
 ```
- set MyServ [t2ws::Start $Port ::GetRequestResponseData GET]
+ set MyServ [t2ws::Start $Port ::Responder_GetGeneral GET]
 ```
 
 ##### See also
@@ -83,8 +83,8 @@ HTTP port (used as T<sup>2</sup>WS HTTP web server identifier)
 ### Proc: t2ws::Stop
 
 Stops one or multiple T<sup>2</sup>WS servers. If no port is provided all running
-T<sup>2</sup>WS HTTP web servers will be stopped, otherwise only the one specified
-by the provided port.
+T<sup>2</sup>WS servers are stopped, otherwise only the one specified by the
+provided port.
 
 ##### Parameters
 
@@ -111,14 +111,14 @@ by the provided port.
 
 Defines a responder command. The arguments 'Method' and 'URI' allow
 applying the specified responder command for a specific HTTP request
-method (GET, POST, ...) and request URI.
+method (GET, POST, ...) and for specific request URIs.
 
 ##### Parameters
 
 |Parameters|Description
 |--:|---
-|Port|HTTP port
-|Responder|Responder command
+|\<Port>|HTTP port
+|\<Responder>|Responder command
 |[Method]|HTTP request method glob matching pattern, default="*"
 |[URI]|HTTP request URI glob matching pattern, default="*"
 
@@ -129,7 +129,7 @@ method (GET, POST, ...) and request URI.
 ##### Examples
 
 ```
- t2ws::DefineRoute $MyServ ::GetRequestResponseData GET
+ t2ws::DefineRoute $MyServ ::Responder_GetApi GET api/*
 ```
 
 ##### See also
@@ -138,11 +138,22 @@ method (GET, POST, ...) and request URI.
 
 ## The responder command
 
-The T<sup>2</sup>WS web server calls each HTTP request a responder command that has to be provided by the application/user. This responder command receives the entire HTTP request data in form of a dictionary, and has to provide back to the server the HTTP response data in form of another dictionary.
+The T<sup>2</sup>WS web server calls each HTTP request a responder command that has
+to be provided by the application. This responder command receives the
+entire HTTP request data in form of a dictionary, and it has to provide
+back to the server the HTTP response data again in form of another
+dictionary.
 
 ##### Responder command setup
 
-[t2ws::Start] in combination with [t2ws::DefineRoute] allow specifying different responder commands for different HTTP request methods and URIs. The T<sup>2</sup>WS web server selects the target responder command by trying to match the HTTP request methods and URIs that have been defined together with the responder commands. More complex method and URI patterns are tried to be matched first and simpler patterns later. The responder command definition order is therefore irrelevant. An example of a set of responder commands is :
+[t2ws::Start] in combination with [t2ws::DefineRoute] allow specifying
+different responder commands for different HTTP request methods and URIs.
+The T<sup>2</sup>WS web server selects the target responder command by trying to
+match the HTTP request method and URI with the method and URI patterns
+that have been defined together with the responder commands. Complexer
+method and URI patterns are tried to be matched first and simpler patterns
+later. The responder command definition order is therefore irrelevant.
+The following line contain some responder command definition examples :
 
 ```
  set MyServ [t2ws::Start $Port ::Responder_General * *]
@@ -153,7 +164,8 @@ The T<sup>2</sup>WS web server calls each HTTP request a responder command that 
 
 ##### Request data dictionary
 
-The responder command receives all HTTP request data in form of a dictionary that contains the following elements :
+The responder command receives all HTTP request data in form of a
+dictionary that contains the following elements :
 
 ||Description
 |--:|---
@@ -164,25 +176,29 @@ The responder command receives all HTTP request data in form of a dictionary tha
 
 ##### Response data dictionary
 
-The responder command returns the response data to the server in form of a dictionary. All elements of this dictionary are optional. The main elements are :
+The responder command returns the response data to the server in form of
+a dictionary. All elements of this dictionary are optional. The main
+elements are :
 
 ||Description
 |--:|---
 |Status|Either a known HTTP status code (e.g. '404'), a known HTTP status message (e.g. 'Not Found') or a custom status string (e.g. '404 File Not Found'). The default status value is '200 OK'. See \<t2ws::DefineStatusCode> and \<t2ws::GetStatusCode> for the HTTP status code and message definitions.
-|Body|HTTP response body, transferred binary encoded. The default body data is an empty string.
+|Body  |HTTP response body, binary encoded. The default body data is an empty string.
 |Header|Custom HTTP response headers fields, case sensitive (!). The header element is itself a dictionary that can specify multiple header fields.
 
-The following auxiliary elements of the response dictionary are recognized :
+The following auxiliary elements of the response dictionary are
+recognized by the T<sup>2</sup>WS server :
 
 ||Description
 |--:|---
-|Content-Type|For convenience reasons content type can directly be specified with this  element instead of the corresponding header field.
-|File|If this element defines a file the file content is read by the T<sup>2</sup>WS web server and transferred as HTTP response body.
-|NoCache|If the value of this element is logically true (e.g. 1) the HTTP client is informed that the data is volatile (by sending the header field: Cache-Control: no-cache, no-store, must-revalidate).
+|Content-Type|For convenience reasons the content type can directly be specified with this element instead of the corresponding header field.
+|File        |If this element is defined the content of the file is read by the T<sup>2</sup>WS web server and sent as HTTP response body to the client.
+|NoCache     |If the value of this element is true (e.g. 1) the HTTP client is informed that the data is volatile (by sending the header field: Cache-Control: no-cache, no-store, must-revalidate).
 
 ##### Examples of responder commands
 
-The following responder command returns simply the HTTP status 404. It can be invoked if no other responder command can be called.
+The following responder command returns simply the HTTP status 404. It can
+be defined to respond to invalid requests.
 
 ```
  proc t2ws::Responder_General {Request} {
@@ -190,7 +206,8 @@ The following responder command returns simply the HTTP status 404. It can be in
  }
 ```
 
-The next responder command extracts from the request URI a Tcl command. This one will be executed and the result returned in the respond body.
+The next responder command extracts from the request URI a Tcl command.
+This one will be executed and the result returned in the respond body.
 
 ```
  proc t2ws::Responder_GetApi {Request} {
@@ -202,19 +219,21 @@ The next responder command extracts from the request URI a Tcl command. This one
  }
 ```
 
-The next responder command extracts from the request URI a File name, that will be returned to the T<sup>2</sup>WS web server if it exists.
+The next responder command extracts from the request URI a File name, that
+will be returned to the T<sup>2</sup>WS web server. The file server will return to
+the client the file content.
 
 ```
  proc t2ws::Responder_GetFile {Request} {
     if {![regexp {^file/(.*)$} [dict get $Request URI] {} File]} {
        return [dict create Status "500" Body "File cannot be extracted from '$URI'"] }
-    if {![file exists $File]} {
-       return [dict create Status "404" Body "404 - File doesn't exist: $File"] }
     return [dict create File $File]
  }
 ```
 
-Rather than creating multiple responder commands for different targets it is also possible to create a single one that handles all requests.
+Rather than creating multiple responder commands for different targets it
+is also possible to create a single one that handles all the different
+requests.
 
 ```
  proc Responder_General {Request} {
@@ -235,7 +254,7 @@ Rather than creating multiple responder commands for different targets it is als
           return [dict create Body $Data]
        }
        "file" - "show" {
-          return [dict create File $ReqLine ContentType  "text/plain"]
+          return [dict create File $ReqLine ContentType "text/plain"]
        }
        "download" {
           return [dict create File $ReqLine ContentType "" Header [dict create Content-Disposition "attachment; filename=\"[file tail $ReqLine]\""]]
@@ -307,8 +326,8 @@ The Mime types for the following file extensions are pre-defined :
 
 |Parameters|Description
 |--:|---
-|File|File extension or full qualified file name
-|MimeType|Mime type
+|\<File>|File extension or full qualified file name
+|\<MimeType>|Mime type
 
 ##### Returns
 
@@ -373,8 +392,8 @@ The following HTTP status codes are pre-defined :
 
 |Parameters|Description
 |--:|---
-|Code|HTTP status code
-|Message|HTTP status message
+|\<Code>|HTTP status code
+|\<Message>|HTTP status message
 
 ##### Returns
 
@@ -436,15 +455,15 @@ default implementation of this command just writes the text to stdout :
  }
 ```
 
-The implementation of this command can be changed to adapt it to an
-application need.
+The implementation of this command can be changed to adapt it to the
+need of a specific application.
 
 ##### Parameters
 
 |Parameters|Description
 |--:|---
-|Message|Message/text to log
-|Tag|Message tag, used tags: 'info', 'input', 'output'
+|\<Message>|Message/text to log
+|\<Tag>|Message tag, used tags: 'info', 'input', 'output'
 
 ##### Returns
 
