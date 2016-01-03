@@ -330,7 +330,9 @@
 	#                   3: full HTTP transfer is logged.
 	#
 	# Parameters:
-	#    [args] - Configuration attribute, configuration attribute/value pairs
+	#    [Option1] - Configuration option 1
+	#    [Value1]  - Configuration value 1
+	#    ...       - Additional option/value pairs can follow
 	#
 	# Returns:
 	#    Configuration options (if the command is called in way 1 or 2)
@@ -811,7 +813,7 @@
 
 			# Check if gzip encoding is accepted, and if the relevant gziped 
 			# file exists
-			if {[regexp {\mgzip\M} [dict get $RequestHeader Accept-encoding]] && [file exists $FilePath.gz]} {
+			if {[regexp {\mgzip\M} [dict get $RequestHeader accept-encoding]] && [file exists $FilePath.gz]} {
 				set FilePath $FilePath.gz
 				dict set ResponseHeader Content-Encoding "gzip"
 			}
