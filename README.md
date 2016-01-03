@@ -295,7 +295,9 @@ The following options are supported :
 
 |Parameters|Description
 |--:|---
-|[args]|Configuration attribute, configuration attribute/value pairs
+|[Option1]|Configuration option 1
+|[Value1] |Configuration value 1
+|...      |Additional option/value pairs can follow
 
 ##### Returns
 
