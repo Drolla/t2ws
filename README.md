@@ -14,27 +14,42 @@ provides the adequate responses to the HTTP requests. The HTTP request data
 are provided to the responder command in form of a dictionary, and the T<sup>2</sup>WS
 web server expects to get back from the responder command the response also
 in form of a dictionary. The following lines implements a responder command
-example. It allows either executing Tcl command lines and returns their
-results, or tells to the T<sup>2</sup>WS server to send files.
+example that allows either executing Tcl commands or that lets the T<sup>2</sup>WS
+server returning file contents.
 
 ```
  proc MyResponder {Request} {
-    regexp {^([^\s]*)\s*(.*)$} [dict get $Request URI] {} Target ReqLine
-    switch -exact -- $Target {
+    regexp {^/(\w*)\s*(.*)$} [dict get $Request URI] {} Command Arguments
+    switch -exact -- $Command {
        "eval" {
-          if {[catch {set Data [uplevel #0 $ReqLine]}]} {
-             return [dict create Status "405" Body "405 - Incorrect Tcl command: $ReqLine"] }
+          if {[catch {set Data [uplevel #0 $Arguments]}]} {
+             return [dict create Status "405" Body "405 - Incorrect Tcl command: $Arguments"] }
           return [dict create Body $Data ContentType "text/plain"]
        }
        "file" {
-          return [dict create File $ReqLine]
+          return [dict create File $Arguments]
        }
     }
-    return [dict create Status "404" Body "404 - Unknown command: $ReqLine"]
+    return [dict create Status "404" Body "404 - Unknown command: $Command"]
  }
 ```
 
-More information about starting T<sup>2</sup>WS servers, stopping them, and assigning
+The web server will accept the commands _eval_ and _file_ and return an error
+
+||Description
+|--:|---
+|(404|unknown command) for other requests :
+
+```
+ http://localhost:8085/eval glob *.tcl
+ -> pkgIndex.tcl t2ws.tcl
+ http://localhost:8085/file pkgIndex.tcl
+ -> if {![package vsatisfies [package provide Tcl] 8.5]} {return} ...
+ http://localhost:8085/exec cmd.exe
+ -> 404 - Unknown command: exec
+```
+
+More information about starting and stopping T<sup>2</sup>WS servers and assigning
 responder commands are provided in section [Main API commands]. Details about
 the way the responder commands are working are provided in section
 [The responder command].
@@ -157,9 +172,9 @@ The following line contain some responder command definition examples :
 
 ```
  set MyServ [t2ws::Start $Port ::Responder_General * *]
- t2ws::DefineRoute $MyServ ::Responder_GetApi GET api/*
- t2ws::DefineRoute $MyServ ::Responder_GetApiPriv GET api/privat/*
- t2ws::DefineRoute $MyServ ::Responder_GetFile GET file/*
+ t2ws::DefineRoute $MyServ ::Responder_GetApi GET /api/*
+ t2ws::DefineRoute $MyServ ::Responder_GetApiPriv GET /api/privat/*
+ t2ws::DefineRoute $MyServ ::Responder_GetFile GET /file/*
 ```
 
 ##### Request data dictionary
@@ -170,7 +185,8 @@ dictionary that contains the following elements :
 ||Description
 |--:|---
 |Method|Request method in upper case (e.g. GET, POST, ...)
-|URI|Request URI, without leading '/'
+|URI|Request URI, including leading '/'
+|URITail|Request URI starting at the first place holder location
 |Header|Request header data, formed itself as dictionary using as keys the header field names in lower case
 |Body|Request body, binary data
 
@@ -201,7 +217,7 @@ The following responder command returns simply the HTTP status 404. It can
 be defined to respond to invalid requests.
 
 ```
- proc t2ws::Responder_General {Request} {
+ proc Responder_General {Request} {
     return [dict create Status "404"]
  }
 ```
@@ -210,10 +226,9 @@ The next responder command extracts from the request URI a Tcl command.
 This one will be executed and the result returned in the respond body.
 
 ```
- proc t2ws::Responder_GetApi {Request} {
-    if {![regexp {^api/(.*)$} [dict get $Request URI] {} TclScript]} {
-       return [dict create Status "500" Body "500 - Tcl command cannot be extracted from '$URI'"] }
-    if {[catch {set Result [uplevel #0 $TclScript]} {
+ proc Responder_GetApi {Request} {
+    set TclScript [dict get $Request URITail]
+    if {[catch {set Result [uplevel #0 $TclScript]}]} {
        return [dict create Status "405" Body "405 - Incorrect Tcl command: $TclScript"] }
     return [dict create Body $Result]
  }
@@ -224,9 +239,8 @@ will be returned to the T<sup>2</sup>WS web server. The file server will return 
 the client the file content.
 
 ```
- proc t2ws::Responder_GetFile {Request} {
-    if {![regexp {^file/(.*)$} [dict get $Request URI] {} File]} {
-       return [dict create Status "500" Body "File cannot be extracted from '$URI'"] }
+ proc Responder_GetFile {Request} {
+    set File [dict get $Request URITail]
     return [dict create File $File]
  }
 ```
@@ -237,7 +251,7 @@ requests.
 
 ```
  proc Responder_General {Request} {
-    regexp {^([^\s]*)\s*(.*)$} [dict get $Request URI] {} Target ReqLine
+    regexp {^/([^\s]*)\s*(.*)$} [dict get $Request URI] {} Target ReqLine
     switch -exact -- $Target {
        "" -
        "help" {
