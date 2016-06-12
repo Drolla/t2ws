@@ -7,7 +7,7 @@ T<sup>2</sup>WS has the following features :
 ||Description
 |--:|---
 |Easy to use|A few lines are sufficient to build a file server to to provide an application API (see example below)
-|Fast|About 100 responses per second (i7-6700HQ)
+|Fast|About 90 responses per second on a Raspberry PI version 1
 |Expandable|A plugin interface allows expanding the T<sup>2</sup>WS feature set
 
 To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>WS package, create an application specific web server responder command and start the HTTP server for the desired port (e.g. 8085) :
