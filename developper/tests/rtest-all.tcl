@@ -39,7 +39,7 @@ puts "Free HTTP port: $HttpPort"
 		proc Responder_RTest {Request} {
 			set GetRequestString [dict get $Request URI]
 	
-			regexp {^([^\s]*)\s*(.*)$} $GetRequestString {} FirstWord RemainingLine
+			regexp {^/([^\s]*)\s*(.*)$} $GetRequestString {} FirstWord RemainingLine
 			switch -exact -- $FirstWord {
 				"help" {
 					set Data "<h1>HTTP Test Server</h1>\n\
@@ -75,7 +75,7 @@ puts "Free HTTP port: $HttpPort"
 			}
 		}
 	
-		set Server [t2ws::Start $HttpPort ::Responder_RTest]
+		set Server [t2ws::Start $HttpPort -responder ::Responder_RTest]
 	}
 
 	
