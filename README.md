@@ -18,7 +18,7 @@ To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>
 
  proc MyResponder {Request} {
     # Process the request URI: Extract a command and its arguments
-    regexp {^/(\w*)\s*(.*)$} [dict get $Request URI] {} Command Arguments
+    regexp {^/(\w*)/(.*)$} [dict get $Request URI] {} Command Arguments
 
     # Implement the different commands (eval <TclCommand>, file <File>)
     switch -exact -- $Command {
@@ -39,12 +39,31 @@ To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>
 With this responder command example the web server will accept the commands _eval_ and _file_ and return an error for other requests :
 
 ```
- http://localhost:8085/eval glob *.tcl
+ http://localhost:8085/eval/glob *.tcl
  -> pkgIndex.tcl t2ws.tcl t2ws_template.tcl
- http://localhost:8085/file pkgIndex.tcl
+ http://localhost:8085/file/pkgIndex.tcl
  -> if {![package vsatisfies [package provide Tcl] 8.5]} {return} ...
- http://localhost:8085/exec cmd.exe
+ http://localhost:8085/exec/cmd.exe
  -> 404 Not Found
+```
+
+Multiple responder commands can be defined for different purposes. The following example is equivalent to the previous one, but it uses separate responder commands for the command evaluation and for the file access :
+
+```
+ package require t2ws
+
+ proc MyResponder_Eval {Request} {
+    set Data [uplevel #0 [dict get $Request URITail]]
+    return [dict create Body $Data Content-Type "text/plain"]
+ }
+
+ proc MyResponder_File {Request} {
+    return [dict create File [dict get $Request URITail]]
+ }
+
+ set Port [t2ws::Start 8085]
+ t2ws::DefineRoute $Port ::MyResponder_Eval -method GET -uri "/eval/*"
+ t2ws::DefineRoute $Port ::MyResponder_File -method GET -uri "/file/*"
 ```
 
 ### What's next
