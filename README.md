@@ -1,6 +1,6 @@
 # T<sup>2</sup>WS - Introduction
 
-**T<sup>2</sup>WS**, the **Tiny Tcl Web Server**, is a small HTTP server that is easily deployable and embeddable in a Tcl application.
+**T<sup>2</sup>WS**, the **Tiny Tcl Web Server**, is a small HTTP server that is easily deployable and embeddable in Tcl applications.
 
 T<sup>2</sup>WS has the following features :
 
