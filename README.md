@@ -17,18 +17,20 @@ To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>
  package require t2ws
 
  proc MyResponder {Request} {
+    # Process the request URI: Extract a command and its arguments
     regexp {^/(\w*)\s*(.*)$} [dict get $Request URI] {} Command Arguments
+
+    # Implement the different commands (eval <TclCommand>, file <File>)
     switch -exact -- $Command {
        "eval" {
-          if {[catch {set Data [uplevel #0 $Arguments]}]} {
-             return [dict create Status "405" Body "405 - Incorrect Tcl command: $Arguments"] }
-          return [dict create Body $Data Content-Type "text/plain"]
-       }
+          set Data [uplevel #0 $Arguments]
+          return [dict create Body $Data Content-Type "text/plain"] }
        "file" {
-          return [dict create File $Arguments]
-       }
+          return [dict create File $Arguments] }
     }
-    return [dict create Status "404" Body "404 - Unknown command: $Command"]
+
+    # Return the status 404 (not found) if the command is unknown
+    return [dict create Status "404"]
  }
 
  t2ws::Start 8085 -responder ::MyResponder
@@ -38,11 +40,11 @@ With this responder command example the web server will accept the commands _eva
 
 ```
  http://localhost:8085/eval glob *.tcl
- -> pkgIndex.tcl t2ws.tcl
+ -> pkgIndex.tcl t2ws.tcl t2ws_template.tcl
  http://localhost:8085/file pkgIndex.tcl
  -> if {![package vsatisfies [package provide Tcl] 8.5]} {return} ...
  http://localhost:8085/exec cmd.exe
- -> 404 - Unknown command: exec
+ -> 404 Not Found
 ```
 
 ### What's next
