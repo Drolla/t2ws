@@ -42,25 +42,6 @@
 # the login credentials can easily be decoded. A secure connection can only 
 # be guaranteed if basic authentication is used in combination with a secure 
 # SHTTP connection (using the SSL/TLS extension).
-#
-#
-# Group: How it works?
-#
-# This plugin checks each HTTP request for the existence of the authorization 
-# header attribute. Example :
-# 
-#    > Authorization: Basic <LoginCredentials>
-#
-# If this attribute doesn't exist, or if the login credentials cannot be decoded 
-# and matched with user/password information defined by the variable 
-# 't2ws::bauth::LoginCredentials', a 401-unauthorized HTTP response is returned
-# together with an authentication request ('WWW-Authenticate') :
-#
-#    > WWW-Authenticate: Basic realm="t2ws demo"
-#
-# All usual browsers will then open a new window and request that a user name 
-# and password are provided. Once the information is provided the browser will
-# use the 'Authorization' header attribute until the current session is closed.
 
 
 # Package requirements, configurations and variables
@@ -72,7 +53,7 @@
 	namespace eval t2ws::bauth {}
 
 
-# Group: Configuration and customization
+# Group: Configuration
 
 # Specification of the configuration options of the package, their default 
 # values and the validity check.
@@ -171,9 +152,27 @@
 	# Register the plugin
 	t2ws::DefinePlugin Pre t2ws::bauth::PluginCmd
 
-	
 # Specify the t2ws_bauth version that is provided by this file:
 package provide t2ws::bauth 0.1
+
+
+# Group: How it works?
+#
+# This plugin checks each HTTP request for the existence of the authorization 
+# header attribute. Example :
+# 
+#    > Authorization: Basic <LoginCredentials>
+#
+# If this attribute doesn't exist, or if the login credentials cannot be decoded 
+# and matched with user/password information defined by the variable 
+# 't2ws::bauth::LoginCredentials', a 401-unauthorized HTTP response is returned
+# together with an authentication request ('WWW-Authenticate') :
+#
+#    > WWW-Authenticate: Basic realm="t2ws demo"
+#
+# All usual browsers will then open a new window and request that a user name 
+# and password are provided. Once the information is provided the browser will
+# use the 'Authorization' header attribute until the current session is closed.
 
 
 ##################################################
