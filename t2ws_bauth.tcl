@@ -94,9 +94,9 @@
 	#
 	#    The following options are supported :
 	#
-	#       -realm= - HTTP attribute used for the HTTP basic authentication request. 
-	#                 This is a simple string that defines the scope of the 
-	#                 protection space. Default: 'T2WS Web Server'
+	#       -realm - HTTP attribute used for the HTTP basic authentication request. 
+	#                This is a simple string that defines the scope of the 
+	#                protection space. Default: 'T2WS Web Server'
 	#
 	# Parameters:
 	#    [Option1] - Configuration option 1
