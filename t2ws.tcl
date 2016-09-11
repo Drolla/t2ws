@@ -1061,6 +1061,7 @@
 					}
 				} else {
 					set State Body
+					break; # Header is completed, read now the body
 				}
 			}
 		}
