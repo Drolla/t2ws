@@ -6,10 +6,10 @@ T<sup>2</sup>WS has the following features :
 
 - **Easy to use** : A few lines are sufficient to build a file server to to provide an application API (see example below)
 - **Fast** : About 90 responses per second on a Raspberry PI version 1
-- **Multi-port support** : Can handle simultaneously multiple sites or ports
+- **Multi-port support** : Can handle multiple sites or ports
 - **Expandable** : A plugin interface allows expanding the T<sup>2</sup>WS feature set
 - **Template engine** : A template engine is available via a plugin
-- **SSL/TLS support** : Secure connections are supported if the TLS package is available
+- **SSL/TLS support** : Secure connections are supported via the TLS package
 
 To add a T<sup>2</sup>WS web server to a Tcl application, load the T<sup>2</sup>WS package, create an application specific web server responder command and start the HTTP server for the desired port (e.g. 8085) :
 
@@ -73,3 +73,4 @@ Start exploring the documentation resources for T<sup>2</sup>WS :
 * [T<sup>2</sup>WS - Main module](https://github.com/Drolla/t2ws/wiki/t2ws) provides all information about the T<sup>2</sup>WS web server main module.
 * [T<sup>2</sup>WS - Template](https://github.com/Drolla/t2ws/wiki/t2ws_template) provides information about the T<sup>2</sup>WS web server template engine plugin.
 * [T<sup>2</sup>WS - Index](https://github.com/Drolla/t2ws/wiki/Index) index register.
+
