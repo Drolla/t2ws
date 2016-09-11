@@ -73,5 +73,6 @@ Start exploring the documentation resources for T<sup>2</sup>WS :
 
 * [T<sup>2</sup>WS - Main module](https://github.com/Drolla/t2ws/wiki/t2ws) provides all information about the T<sup>2</sup>WS web server main module.
 * [T<sup>2</sup>WS - Template](https://github.com/Drolla/t2ws/wiki/t2ws_template) provides information about the T<sup>2</sup>WS web server template engine plugin.
+* [T<sup>2</sup>WS - BAuth](https://github.com/Drolla/t2ws/wiki/t2ws_bauth) provides information about the basic authentication plugin.
 * [T<sup>2</sup>WS - Index](https://github.com/Drolla/t2ws/wiki/Index) index register.
 
