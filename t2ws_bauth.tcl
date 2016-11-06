@@ -16,9 +16,10 @@
 # Group: Introduction
 #
 # This plugin provides basic HTTP authentication to the T2WS server. It is 
-# loaded by executing the following command :
+# loaded and enabled by executing the following commands :
 #
 #    > package require t2ws::bauth
+#    > t2ws::EnablePlugin $Port t2ws::bauth
 #
 # After loading this package the available login credentials have to be defined 
 # by defining the dictionary variable 't2ws::bauth::LoginCredentials' :
@@ -150,10 +151,10 @@
 	}
 	
 	# Register the plugin
-	t2ws::DefinePlugin Pre t2ws::bauth::PluginCmd
+	t2ws::DefinePlugin t2ws::bauth Pre t2ws::bauth::PluginCmd
 
 # Specify the t2ws_bauth version that is provided by this file:
-package provide t2ws::bauth 0.1
+package provide t2ws::bauth 0.2
 
 
 # Group: How it works?

@@ -17,10 +17,11 @@
 # Group: Introduction
 # This plugin extends the T2WS server with a template engine that process 
 # template files or raw response data to generate the desired output file 
-# (usually a HTML page). The plugin is loaded by executing the following 
-# command :
+# (usually a HTML page). The plugin is loaded and enabled by executing the 
+# following commands :
 #
 #    > package require t2ws::template
+#    > t2ws::EnablePlugin $Port t2ws::template
 #
 # Once loaded the responder command can add the following response dictionary 
 # field to trigger the T2WS server to post-process the response data by 
@@ -113,7 +114,7 @@
 	}
 	
 	# Register the plugin
-	t2ws::DefinePlugin Post t2ws::template::PostPluginCmd
+	t2ws::DefinePlugin t2ws::template Post t2ws::template::PostPluginCmd
 
 
 # Group: Template commands
@@ -247,7 +248,7 @@
 
 # Specify the t2ws version that is provided by this file:
 
-	package provide t2ws::template 0.3
+	package provide t2ws::template 0.4
 
 
 ##################################################
