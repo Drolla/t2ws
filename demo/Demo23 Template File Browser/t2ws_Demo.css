@@ -1,0 +1,26 @@
+#header {
+	background-color:black;
+	color:white;
+	text-align:center;
+	position: relative;
+}
+#header h1 {
+	margin: 0;
+}
+#section {
+	margin-left: 10px;
+	padding:10px;
+}
+#footer {
+	background-color:black;
+	color:white;
+	clear:both;
+	text-align: center;
+	padding:5px;
+}
+.li_folder {
+	list-style-image: url('Icon16x16_Folder.png');
+}
+.li_file {
+	list-style-image: url('Icon16x16_File.png');
+}

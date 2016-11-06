@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<head>
+	<link rel="stylesheet" href="t2ws_Demo.css">
+</head>
+<body>
+	<div id="header">
+		<h1>T<sup>2</sup>WS Demo</h1>
+	</div>
+   <h1>Web client:</h1>
+%catch {
+	   <p>Host: [dict get $Request Header host]</p>
+	   <p>User-Agent: [dict get $Request Header user-agent]</p>
+%}
+	<h1>Tcl Plattform:</h1>
+	<table class="t_table">
+		<thead>
+			<tr><th>Name</th><th>Data</th></tr>
+		</thead>
+		<tbody>
+%foreach {Name Value} [array get ::tcl_platform] {
+			<tr><td>$Name</td><td>$Value</td></tr>
+%}
+		</tbody>
+	</table>
+	<div id="footer">
+		T<sup>2</sup>WS Demo [clock format [clock seconds]]
+	</div>
+</html>

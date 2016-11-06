@@ -1,0 +1,32 @@
+%set RelDir [dict get $Request URITail]
+%set TailDir [file tail $RelDir]
+%set FullDir [file join $::RootDir $RelDir]
+%set RelParentDir [file dirname $RelDir]
+<!DOCTYPE html>
+<head>
+	<link rel="stylesheet" href="/t2ws_Demo.css">
+</head>
+<body>
+	<div id="header">
+		<h1>T<sup>2</sup>WS Demo</h1>
+	</div>
+	<div id="section">
+		<h1>T<sup>2</sup>WS Template Demo</h1>
+		<h2>Directory listing for $FullDir</h2>
+		<hr></hr>
+
+		<ul>
+			<li class="li_folder"><a href="/$RelParentDir">..</a></li>
+%			foreach DirItem [glob -directory $FullDir -tails -nocomplain *] {
+%				if {[file isdirectory $FullDir/$DirItem]} {
+					<li class="li_folder"><a href="$TailDir/$DirItem">$DirItem</a></li>
+%				} else {
+					<li class="li_file"><a href="$TailDir/$DirItem">$DirItem</a></li>
+%				}
+%			}
+		</ul>
+	</div>
+	<div id="footer">
+		T<sup>2</sup>WS Demo [clock format [clock seconds]]
+	</div>
+</html>
