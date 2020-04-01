@@ -50,7 +50,7 @@
 	# widget is returned.
 
 	update
-	toplevel .readme -bd 2
+	toplevel .readme -bd 3
 	wm withdraw .readme
 	wm overrideredirect .readme 1
 	wm geometry .readme +[expr [winfo rootx .]+[winfo reqwidth .]+5]+[winfo rooty .]
