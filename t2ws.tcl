@@ -1080,12 +1080,31 @@
 
 		# Read the Body (if the header section was read successfully)
 		if {$State=="Body"} {
-		    set RequestBody {}
-		    while {![eof $Socket]} {
-			append RequestBody [read $Socket]
-		    }
+			# https://www.w3.org/Protocols/HTTP/1.0/draft-ietf-http-spec.html#BodyLength
+			#
+			# When an Entity-Body is included with a message, the length of that 
+			# body may be determined in one of two ways. 
+			# If a Content-Length header field is present, its value in bytes 
+			# represents the length of the Entity-Body. Otherwise, the body length 
+			# is determined by the closing of the connection by the server. 
+		
+			set RequestBody {}
+		
+			if {[dict exists $RequestHeader content-length]} {
+				set contentLength [dict get $RequestHeader content-length]
+				while {![eof $Socket]} {
+					if {[string bytelength $RequestBody] >= $contentLength} { break }
+					append RequestBody [read $Socket $contentLength]
+				}
+			} else {
+				while {![eof $Socket]} {
+					append RequestBody [read $Socket]
+				}
+			}
+			
 			if {$RequestBody!=""} {
-				Log {$RequestBody} input 3 }
+				Log {$RequestBody} input 3 
+			}
 		}
 		
 		# Determine if the response can be gzipped
