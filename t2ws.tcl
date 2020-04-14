@@ -1080,10 +1080,7 @@
 
 		# Read the Body (if the header section was read successfully)
 		if {$State=="Body"} {
-		    set RequestBody {}
-		    while {![eof $Socket]} {
-			append RequestBody [read $Socket]
-		    }
+			set RequestBody [read $Socket]
 			if {$RequestBody!=""} {
 				Log {$RequestBody} input 3 }
 		}
@@ -1623,7 +1620,7 @@
 	#    -
 	#    
 	# Examples:
-	#    > t2ws::DefinePlugin Pre ::MyT2wsPlugin
+	#    > t2ws::DefinePlugin my_plugin Pre ::MyT2wsPlugin
 	##########################
 
 	proc t2ws::DefinePlugin {Plugin PreOrPost Command} {
