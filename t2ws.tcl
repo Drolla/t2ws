@@ -1080,30 +1080,68 @@
 
 		# Read the Body (if the header section was read successfully)
 		if {$State=="Body"} {
-			# https://www.w3.org/Protocols/HTTP/1.0/draft-ietf-http-spec.html#BodyLength
-			#
-			# When an Entity-Body is included with a message, the length of that 
-			# body may be determined in one of two ways. 
-			# If a Content-Length header field is present, its value in bytes 
-			# represents the length of the Entity-Body. Otherwise, the body length 
-			# is determined by the closing of the connection by the server. 
-		
 			set RequestBody {}
-		
-			if {[dict exists $RequestHeader content-length]} {
-				set contentLength [dict get $RequestHeader content-length]
-				while {![eof $Socket]} {
-					if {[string bytelength $RequestBody] >= $contentLength} { break }
-					append RequestBody [read $Socket $contentLength]
-				}
-			} else {
-				while {![eof $Socket]} {
-					append RequestBody [read $Socket]
-				}
-			}
 			
+			# Read the body in binary mode to match the content length and avoid
+			# any unwanted translation of binary data
+			fconfigure $Socket -translation {binary crlf}
+
+			set TransferEncoding ""
+			if {[dict exists $RequestHeader transfer-encoding]} {
+				set TransferEncoding [dict get $RequestHeader transfer-encoding]
+			}
+
+			# RFC7230 - 3.3.3. Message Body Length
+			# If a Transfer-Encoding header field is present and the chunked
+			# transfer coding (Section 4.1) is the final encoding, the message
+			# body length is determined by reading and decoding the chunked
+			# data until the transfer coding indicates the data is complete.
+			if {[string match {*chunked} $TransferEncoding]} {
+				while {![eof $Socket]} {
+					set ChunkHeader ""
+					while {$ChunkHeader==""} {
+						gets $Socket ChunkHeader
+					}
+
+					# The chunk header can include "chunk extensions" after a semicolon
+					set ChunkSizeHex [lindex [split $ChunkHeader {;}] 0]
+					set ChunkSize [expr 0x$ChunkSizeHex]
+					if {$ChunkSize==0} {
+						break}
+
+					set CurrentChunk {}
+					while {![eof $Socket]} {
+						if {[string bytelength $CurrentChunk]>=$ChunkSize} {
+							break}
+						append CurrentChunk [read $Socket $ChunkSize]
+					}
+
+					append RequestBody $CurrentChunk
+				}
+
+				#dict set Response ErrorStatus 501
+				#dict set Response ErrorBody {Chunked transfer encoding not supported}
+				#Log {Chunked transfer encoding not supported} info 2
+			} elseif {[dict exists $RequestHeader content-length]} {
+				# Read the number of bytes defined by the content-length header
+				set ContentLength [dict get $RequestHeader content-length]
+				while {![eof $Socket]} {
+					if {[string bytelength $RequestBody]>=$ContentLength} {
+						break}
+					append RequestBody [read $Socket $ContentLength]
+				}
+			
+			} else {
+				# No "content-length" and not "transfer-encoding" doesn't end
+				# in "chunked". So there should be no body.
+			}
+
+			# Switch back to the standard translation mode
+			fconfigure $Socket -translation {auto crlf}
+
 			if {$RequestBody!=""} {
-				Log {$RequestBody} input 3 
+				Log {Received body length: [string bytelength $RequestBody]} info 3 
+				Log {$RequestBody} input 3
 			}
 		}
 		
