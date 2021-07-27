@@ -1212,7 +1212,7 @@
 		# Call the responder command
 		if {![dict exists $Response ErrorStatus]} {
 			Log {Call Responder command: [lindex $ResponderDef 3]} info 2
-			catch {set ResponseD [[lindex $ResponderDef 3] $Request]}
+			catch {set ResponseD [{*}[lindex $ResponderDef 3] $Request]}
 
 			# Process the response (there was a failure if 'ResponseD' doesn't exist)
 			if {[info exists ResponseD]} {
