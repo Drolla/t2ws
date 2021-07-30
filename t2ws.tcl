@@ -409,6 +409,44 @@
 #    >       }
 #    >    }
 #    > }
+#
+# Topic: Responder commands with additional arguments
+# <t2ws::Start> and <t2ws::DefineRoute> can define additional "static" 
+# parameters for the responder command by packing the command and the parameters
+# together as a list:
+#
+#    > set MyServ [t2ws::Start $Port [list ::Responder "General"] -method * -uri *]
+#    > t2ws::DefineRoute $MyServ [list ::Responder "API"] -method GET -uri /api/*
+#    > t2ws::DefineRoute $MyServ [list ::Responder "File"] -method GET -uri /file/*
+#
+# The responder command will be called with these static parameters as first 
+# arguments, followed by the HTTP request data as last argument:
+#
+#    > proc MyResponder {StaticPar Request} {
+#    > 	set ScriptOrFile [dict get $Request URITail]
+#    > 	switch -exact $StaticPar {
+#    > 		"General"} {
+#    > 			...
+#    > 		}
+#    > 		"API" {
+#    > 			...
+#    > 		}
+#    > 		"File" {
+#    > 			...
+#    > 		}
+#    > 	}
+#    > }
+#
+# Or in a more general way, an arbitrary number of static parameters can be 
+# packed together with the responder command:
+#
+#    > t2ws::DefineRoute $MyServ [list ::Responder {*}$StaticP] -method GET -uri /file/*
+#    > 
+#    > proc MyResponder {args} {
+#    > 	set Request [lindex $args end]
+#    > 	set StaticParams [lrange $args 0 end-1]
+#    > 	...
+#    > }
 
 	##########################
 	# DefaultResponderCommand

@@ -74,8 +74,17 @@ puts "Free HTTP port: $HttpPort"
 				}
 			}
 		}
+
+		proc Responder_OtherRoute {args} {
+			set Request [lindex $args end]
+			set OtherArgs [lrange $args 0 end-1]
+			set GetRequestString [dict get $Request URI]
+			return [dict create Body "Request:$GetRequestString\nOtherArgs:$OtherArgs"]
+		}
 	
 		set Server [t2ws::Start $HttpPort -responder ::Responder_RTest]
+		t2ws::DefineRoute $Server ::Responder_OtherRoute -uri "/route2/*"
+		t2ws::DefineRoute $Server [list ::Responder_OtherRoute "FixedArg1" "FixedArg2"] -uri "/route3/*"
 	}
 
 	
@@ -189,6 +198,46 @@ puts "Free HTTP port: $HttpPort"
 				"Content-Length: 9"
 				""
 				"My result"
+			} \n]
+
+	# Other Route, no additional arguments
+		tcltest::test "oroute_naa" "Other route, no additional arguments" \
+			-match exact \
+			-body {HttpTransaction [join {
+				"GET /route2/hello HTTP/1.1"
+				"Accept: */*"
+				"User-Agent: Tcl http test client"
+				"Connection: close"
+				""
+			} \n]} \
+			-result [join {
+				"HTTP/1.1 200 OK"
+				"Connection: close"
+				"Content-Type: text/plain"
+				"Content-Length: 32"
+				""
+				"Request:/route2/hello"
+				"OtherArgs:"
+			} \n]
+
+	# Other Route, with additional arguments
+		tcltest::test "oroute_naa" "Other route, no additional arguments" \
+			-match exact \
+			-body {HttpTransaction [join {
+				"GET /route3/hello HTTP/1.1"
+				"Accept: */*"
+				"User-Agent: Tcl http test client"
+				"Connection: close"
+				""
+			} \n]} \
+			-result [join {
+				"HTTP/1.1 200 OK"
+				"Connection: close"
+				"Content-Type: text/plain"
+				"Content-Length: 51"
+				""
+				"Request:/route3/hello"
+				"OtherArgs:FixedArg1 FixedArg2"
 			} \n]
 
 
