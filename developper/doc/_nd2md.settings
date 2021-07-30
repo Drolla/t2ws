@@ -1,0 +1,30 @@
+# Specify the destination directory and documentation file definitions inside
+# the file _nd2md.settings:
+#
+#   set nd2md_DestDir <MD_DestinationDirectory>
+#   array set nd2md_nd2md {
+#     <TclFile1> <MdFile1>
+#     <TclFile2> <MdFile2>
+#     ... ...
+#   }
+#   set nd2md_regsub {
+#     { {Patter1} {Subst1} }
+#     { {Patter2} {Subst2} }
+#     ... ...
+#   }
+#
+# Example:
+#
+#   set nd2md_DestDir "../../../thc.wiki"
+#   array set nd2md_nd2md {
+#     ../../bin/thc.tcl {THC-Core-functions.md}
+#   }
+#   set nd2md_regsub {
+#     { {H2O} {H<sup>2</sup>O} }
+#   }
+
+set nd2md_DestDir "../../../t2ws.wiki"
+
+set nd2md_regsub {
+	{ {T2WS} {T<sup>2</sup>WS} }
+}
